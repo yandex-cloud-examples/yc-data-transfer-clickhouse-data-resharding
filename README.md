@@ -1,6 +1,6 @@
 # Перешардирование данных в кластере Yandex Managed Service for ClickHouse®
 
-С помощью сервиса Data Transfer вы можете перенести вашу базу данных из шардированного кластера-источника [Yandex Managed Service for ClickHouse®](https://cloud.yandex.ru/docs/managed-clickhouse) в кластер-приемник Yandex Managed Service for ClickHouse® с другой конфигурацией шардов.
+С помощью сервиса Data Transfer вы можете перенести вашу базу данных из шардированного кластера-источника [Yandex Managed Service for ClickHouse®](https://yandex.cloud/ru/docs/managed-clickhouse) в кластер-приемник Yandex Managed Service for ClickHouse® с другой конфигурацией шардов.
 
 Этот способ позволяет перераспределить данные шардированных таблиц по новой конфигурации шардов кластера ClickHouse®.
 
