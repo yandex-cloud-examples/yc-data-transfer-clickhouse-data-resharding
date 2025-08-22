@@ -26,7 +26,7 @@ resource "yandex_vpc_subnet" "subnet-a" {
   name           = "subnet-a"
   zone           = "ru-central1-a"
   network_id     = yandex_vpc_network.network.id
-  v4_cidr_blocks = ["10.1.0.0/16"] # If CIDR block collides with the subnet of source Managed Service for ClickHouse cluster, change it
+  v4_cidr_blocks = ["10.1.0.0/16"] # If CIDR block collides with the subnet of the source Managed Service for ClickHouse cluster, change it
 }
 
 resource "yandex_vpc_subnet" "subnet-d" {
@@ -34,7 +34,7 @@ resource "yandex_vpc_subnet" "subnet-d" {
   name           = "subnet-d"
   zone           = "ru-central1-d"
   network_id     = yandex_vpc_network.network.id
-  v4_cidr_blocks = ["172.19.0.0/16"] # If CIDR block collides with the subnet of source Managed Service for ClickHouse cluster, change it
+  v4_cidr_blocks = ["172.19.0.0/16"] # If CIDR block collides with the subnet of the source Managed Service for ClickHouse cluster, change it
 }
 
 resource "yandex_vpc_security_group" "security-group" {
