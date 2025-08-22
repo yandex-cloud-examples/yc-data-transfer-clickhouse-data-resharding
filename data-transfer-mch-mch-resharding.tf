@@ -6,10 +6,10 @@
 # Set source and target clusters settings
 locals {
   # Source cluster settings:
-  source_cluster = ""   # Set the source cluster identifier
-  source_db_name = ""   # Set the source cluster database name
-  source_user    = ""   # Set the source cluster username
-  source_pwd     = ""   # Set the source cluster password
+  source_cluster  = ""   # Set the source cluster identifier
+  source_db_name  = ""   # Set the source cluster database name
+  source_user     = ""   # Set the source cluster username
+  source_password = ""   # Set the source cluster password
   # Target cluster settings:
   target_clickhouse_version = "" # Set the ClickHouse version
   target_user               = "" # Set the target cluster username
@@ -144,7 +144,7 @@ resource "yandex_mdb_clickhouse_cluster" "clickhouse-cluster" {
 
 resource "yandex_mdb_clickhouse_database" "clickhouse-database" {
   cluster_id = yandex_mdb_clickhouse_cluster.clickhouse-cluster.id
-  name       = local.source_db_name
+  name       = local.source_db_name # The database name must match the name of the database in the source cluster
 }
 
 resource "yandex_mdb_clickhouse_user" "clickhouse-user" {
@@ -168,7 +168,7 @@ resource "yandex_datatransfer_endpoint" "managed-clickhouse-source" {
           database       = local.source_db_name
           user           = local.source_user
           password {
-            raw = local.source_pwd
+            raw = local.source_password
           }
         }
       }
@@ -184,7 +184,7 @@ resource "yandex_datatransfer_endpoint" "managed-clickhouse-target" {
       connection {
         connection_options {
           mdb_cluster_id = yandex_mdb_clickhouse_cluster.clickhouse-cluster.id
-          database       = local.source_db_name
+          database       = yandex_mdb_clickhouse_database.clickhouse-database.name
           user           = local.target_user
           password {
             raw = local.target_password
