@@ -1,19 +1,19 @@
-# Infrastructure for the Yandex Cloud Managed Service for ClickHouse cluster and Data Transfer.
+# Infrastructure for the Yandex Cloud Managed Service for ClickHouse cluster and Data Transfer
 #
 # RU: https://cloud.yandex.ru/docs/managed-clickhouse/tutorials/data-migration
 # EN: https://cloud.yandex.com/en/docs/managed-clickhouse/tutorials/data-migration
 #
-# Set source and target clusters settings.
+# Set source and target clusters settings
 locals {
   # Source cluster settings:
-  source_cluster = ""   # Set the source cluster identifier.
-  source_db_name = ""   # Set the source cluster database name.
-  source_user    = ""   # Set the source cluster username.
-  source_pwd     = ""   # Set the source cluster password.
+  source_cluster  = ""   # Set the source cluster identifier
+  source_db_name  = ""   # Set the source cluster database name
+  source_user     = ""   # Set the source cluster username
+  source_password = ""   # Set the source cluster password
   # Target cluster settings:
-  target_clickhouse_version = "" # Set the ClickHouse version.
-  target_user               = "" # Set the target cluster username.
-  target_password           = "" # Set the target cluster password.
+  target_clickhouse_version = "" # Set the ClickHouse version
+  target_user               = "" # Set the target cluster username
+  target_password           = "" # Set the target cluster password
 }
 
 resource "yandex_vpc_network" "network" {
@@ -26,7 +26,7 @@ resource "yandex_vpc_subnet" "subnet-a" {
   name           = "subnet-a"
   zone           = "ru-central1-a"
   network_id     = yandex_vpc_network.network.id
-  v4_cidr_blocks = ["10.1.0.0/16"]
+  v4_cidr_blocks = ["10.1.0.0/16"] # If CIDR block collides with the subnet of the source Managed Service for ClickHouse cluster, change it
 }
 
 resource "yandex_vpc_subnet" "subnet-d" {
@@ -34,7 +34,7 @@ resource "yandex_vpc_subnet" "subnet-d" {
   name           = "subnet-d"
   zone           = "ru-central1-d"
   network_id     = yandex_vpc_network.network.id
-  v4_cidr_blocks = ["172.16.0.0/16"]
+  v4_cidr_blocks = ["172.19.0.0/16"] # If CIDR block collides with the subnet of the source Managed Service for ClickHouse cluster, change it
 }
 
 resource "yandex_vpc_security_group" "security-group" {
@@ -62,6 +62,10 @@ resource "yandex_mdb_clickhouse_cluster" "clickhouse-cluster" {
   environment        = "PRODUCTION"
   network_id         = yandex_vpc_network.network.id
   security_group_ids = [yandex_vpc_security_group.security-group.id]
+
+  lifecycle {
+    ignore_changes = [database, user,]
+  }
 
   clickhouse {
     resources {
@@ -136,17 +140,20 @@ resource "yandex_mdb_clickhouse_cluster" "clickhouse-cluster" {
     zone      = "ru-central1-d"
     subnet_id = yandex_vpc_subnet.subnet-d.id
   }
+}
 
-  database {
-    name = local.source_db_name
-  }
+resource "yandex_mdb_clickhouse_database" "clickhouse-database" {
+  cluster_id = yandex_mdb_clickhouse_cluster.clickhouse-cluster.id
+  name       = local.source_db_name # The database name must match the name of the database in the source cluster
+}
 
-  user {
-    name     = local.target_user
-    password = local.target_password
-    permission {
-      database_name = local.source_db_name
-    }
+resource "yandex_mdb_clickhouse_user" "clickhouse-user" {
+  cluster_id = yandex_mdb_clickhouse_cluster.clickhouse-cluster.id
+  name       = local.target_user
+  password   = local.target_password
+
+  permission {
+      database_name = yandex_mdb_clickhouse_database.clickhouse-database.name
   }
 }
 
@@ -161,7 +168,7 @@ resource "yandex_datatransfer_endpoint" "managed-clickhouse-source" {
           database       = local.source_db_name
           user           = local.source_user
           password {
-            raw = local.source_pwd
+            raw = local.source_password
           }
         }
       }
@@ -177,7 +184,7 @@ resource "yandex_datatransfer_endpoint" "managed-clickhouse-target" {
       connection {
         connection_options {
           mdb_cluster_id = yandex_mdb_clickhouse_cluster.clickhouse-cluster.id
-          database       = local.source_db_name
+          database       = yandex_mdb_clickhouse_database.clickhouse-database.name
           user           = local.target_user
           password {
             raw = local.target_password
